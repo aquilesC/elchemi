@@ -163,7 +163,7 @@ def calculate_flickering_frequency(intensity_data):
     magnitude_spectrum[0] = 0
     dominant_frequency_index = np.argmax(magnitude_spectrum)
     dominant_frequency = np.sqrt(np.square(fft_freq[dominant_frequency_index]))
-    return dominant_frequency, fft_freq, magnitude_spectruma
+    return dominant_frequency, fft_freq, magnitude_spectrum
     
 # Generate square waves on W1 and W2 channels of AD2
 generate_square_wave_W1(hdwf, frequency_W1, amplitude_W1)
