@@ -6,7 +6,7 @@ from PyQt5 import uic
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QFileDialog, QMainWindow, QScrollBar
 
-from elchemi.experiments.analysis import AnalyzeModel
+from elchemi.experiments.harmonic_analysis import AnalyzeModel
 from elchemi.experiments.live_acquisition import LiveAcquisition
 from elchemi.view import VIEW_FOLDER
 from elchemi.view.roi_plots import RoiWindow
@@ -14,15 +14,23 @@ from elchemi.view.roi_plots import RoiWindow
 home_path = Path.home()
 
 
-class ScatteringMainWindow(QMainWindow):
+class DisplayWindow(QMainWindow):
     def __init__(self, model: AnalyzeModel = None, live_model: LiveAcquisition = None):
         """
         :param measurement model: Model used to analyze the data
+
+        .. ToDo:
+            + add button in live view for connecting to devices
+            + add buttons for start and stop aquisition
+            + add button for starting the digilent (separate from camera) waveforms
+            + add toggle button for switching between real time view and FFT calculated harmonic view
+            + add entry fields to GUI for camera parameters and FFT params. this can be done by just editting a config file in the live-view, but will need a small widget.
+
         """
         super().__init__(parent=None)
         uic.loadUi(str(VIEW_FOLDER / 'GUI' / 'main_window.ui'), self)
         self.setWindowTitle('Potentiodynamic Data Exploration')
-        self.action_open.triggered.connect(self.open)
+        self.action_open.triggered.connect(self.load_data)
         self.analyze_model = model
         self.live_model = live_model
 
@@ -75,7 +83,7 @@ class ScatteringMainWindow(QMainWindow):
         self.line_filename.setText(str(config_data['filename']))
         self.line_totalframes.setText(str(config_data['total_frames']))
 
-    def open(self):
+    def load_data(self):
         if self.is_open:
             self.close_data()
 
@@ -87,9 +95,7 @@ class ScatteringMainWindow(QMainWindow):
             return
 
         self.analyze_model.open(str(file))
-
         self.filename_name.setText(str(file.stem))
-
         self.image_widget.setImage(self.analyze_model.data[0, :, :], autoLevels=True)
 
         self.setWindowTitle(f'Potentiodynamic Analysis: {file.name}')

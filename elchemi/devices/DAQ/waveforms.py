@@ -7,7 +7,7 @@ This module is made to control `Digilent WaveForms <https://store.digilentinc.co
 It is developed with the `Analog Discovery 2 <https://reference.digilentinc.com/reference/instrumentation/analog-discovery-2/start>`_ but probably also works for the other devices.
 
 It depends on `Digilent's DWF library wrapper <https://pypi.org/project/dwf/>`_ (pip install dwf) which provides a pythonic way of interacting with the WaveForms dll.
-The DfwController class inherits from the Dwf class of the dwf module, meaning all functionality of Dwf is available.
+The DwfController class inherits from the Dwf class of the dwf module, meaning all functionality of Dwf is available.
 In addition the input and output channels are made available internally and basic methods are added to read and write analog values.
 The example code at the end shows both examples of using these basic methods and of interacting with the more complex inherited methods.
 
@@ -15,7 +15,7 @@ Unfortunately there's no extended documentation for the dwf module, but original
 described in the `WaveForms SDK Reference Manual <https://s3-us-west-2.amazonaws.com/digilent/resources/instrumentation/waveforms/waveforms_sdk_rm.pdf>`_.
 Using an autocompleting IDE it's possible to explore the available methods and find the documentation of the corresponding functions in the WaveForms SDK Reference Manual.
 
-In addition to the DfwController class this module contains functions to explore which devices are connected and to close connections.
+In addition to the DwfController class this module contains functions to explore which devices are connected and to close connections.
 
 """
 import logging
@@ -24,7 +24,7 @@ import time
 import numpy as np
 
 
-class DfwController(dwf.Dwf):
+class DwfController(dwf.Dwf):
     """
     Controller for Digilent devices controlled through WaveForms software
     """
@@ -75,7 +75,7 @@ class DfwController(dwf.Dwf):
         self._time_stabilized = time.time()  # will be overwritten by write_analog()
         self.preset_basic_analog()
 
-        self.logger.debug('DfwController object created')
+        self.logger.debug('DwfController object created')
 
     # AnalogIn
     def preset_basic_analog(self, n=80, freq=10000, range=50.0, return_std=False):
@@ -247,9 +247,9 @@ class DfwController(dwf.Dwf):
         self.do.dataSet(pin, (level,))
 
 
-class SimulatedDfwController:
+class SimulatedDwfController:
     """
-    Rudimentary simulated version of DfwController for the purpose of developing without a connected device.
+    Rudimentary simulated version of DwfController for the purpose of developing without a connected device.
     Note that it is far from a complete simulation, it just mimics a few basic methods.
     You can add any simulation function to relate read_analog() to a value set with write_analog() via _analog_simulation_functions.
     """
@@ -480,7 +480,7 @@ if __name__ == '__main__':
     print_device_list(devs)
 
     # Create object for device number 0, with config number 0
-    daq = DfwController(0, 0)
+    daq = DwfController(0, 0)
     for i in range(10):
         daq.write_analog(2.3, 0)  # 1.3V on analog out channel 0
         time.sleep(0.5)
@@ -497,7 +497,7 @@ if __name__ == '__main__':
     # Apply settings for using basic analog methods.
     # Note that this is already automatically done at instantiation of the object so technically not required at this moment.
     # But if you've those changed settings (like we'll do in the advanced example below) it is necessary.
-    # daq = DfwController(0, 0)
+    # daq = DwfController(0, 0)
     #
     # t0 = time.time()
     # for k in range(10):

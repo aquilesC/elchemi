@@ -4,8 +4,8 @@ import click
 from PyQt5.QtWidgets import QApplication
 
 from elchemi.experiments.live_acquisition import LiveAcquisition
-from elchemi.view.main_window import ScatteringMainWindow
-from elchemi.experiments.analysis import AnalyzeModel
+from elchemi.view.main_window import DisplayWindow
+from elchemi.experiments.harmonic_analysis import AnalyzeModel
 
 
 @click.command()
@@ -15,7 +15,7 @@ def start(config):
     acquisition = LiveAcquisition(config)
     acquisition.load_config()
     app = QApplication([])
-    win = ScatteringMainWindow(analysis, acquisition)
+    win = DisplayWindow(analysis, acquisition)
     win.show()
 
     sys.exit(app.exec())

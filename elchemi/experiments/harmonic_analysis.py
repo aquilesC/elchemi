@@ -7,8 +7,7 @@ from numpy.fft import fftfreq
 from scipy.fft import fft
 from scipy.signal import spectrogram
 
-from elchemi import param_folder
-
+# from elchemi import param_folder  #uncomment if necessary
 
 class AnalyzeModel:
     metadata = {}
@@ -77,7 +76,10 @@ class AnalyzeModel:
         max_power : float
             The maximum power at the given maximum frequency, without considering 0Hz
 
+        .. Todo:: check if rfft is better option, could be 2x faster.
         """
+
+
         added = self.calculate_data_on_roi(X, Y)
         transformed = fft(added)
         N = len(added)
@@ -130,7 +132,7 @@ class AnalyzeModel:
             Number of cycles to use to calculate the FFT
 
         .. todo::
-            The FFT calculates all the frequencies, but only one is kepy. Perhaps this should be extended to avoid
+            The FFT calculates all the frequencies, but only one is key. Perhaps this should be extended to avoid
             recalculating when the user wants to explore other frequencies.
         .. todo::
             The code forces a sliding window that jumps one cycle each time. It may be wise of give flexibility to
