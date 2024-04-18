@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>813</width>
-    <height>813</height>
+    <width>809</width>
+    <height>860</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -21,7 +21,7 @@
        <item>
         <widget class="QTabWidget" name="tabWidget">
          <property name="currentIndex">
-          <number>0</number>
+          <number>2</number>
          </property>
          <widget class="QWidget" name="raw_data">
           <attribute name="title">
@@ -216,6 +216,13 @@
              </property>
              <layout class="QVBoxLayout" name="verticalLayout">
               <item>
+               <widget class="QPushButton" name="button_config_edit">
+                <property name="text">
+                 <string>Config Edit</string>
+                </property>
+               </widget>
+              </item>
+              <item>
                <widget class="QGroupBox" name="groupBox">
                 <property name="title">
                  <string>Camera</string>
@@ -244,15 +251,15 @@
                  <item row="1" column="1">
                   <widget class="QLineEdit" name="line_gain"/>
                  </item>
-                 <item row="2" column="1">
-                  <widget class="QLineEdit" name="line_framerate"/>
-                 </item>
                  <item row="2" column="0">
                   <widget class="QLabel" name="label_6">
                    <property name="text">
                     <string>Frame Rate</string>
                    </property>
                   </widget>
+                 </item>
+                 <item row="2" column="1">
+                  <widget class="QLineEdit" name="line_framerate"/>
                  </item>
                  <item row="3" column="0">
                   <widget class="QLabel" name="label_7">
@@ -261,6 +268,9 @@
                    </property>
                   </widget>
                  </item>
+                 <item row="3" column="1">
+                  <widget class="QLineEdit" name="line_width"/>
+                 </item>
                  <item row="4" column="0">
                   <widget class="QLabel" name="label_8">
                    <property name="text">
@@ -268,14 +278,8 @@
                    </property>
                   </widget>
                  </item>
-                 <item row="3" column="1">
-                  <widget class="QLineEdit" name="line_width"/>
-                 </item>
                  <item row="4" column="1">
                   <widget class="QLineEdit" name="line_height"/>
-                 </item>
-                 <item row="5" column="1">
-                  <widget class="QLineEdit" name="line_xcenter"/>
                  </item>
                  <item row="5" column="0">
                   <widget class="QLabel" name="label_9">
@@ -283,6 +287,9 @@
                     <string>X-Center</string>
                    </property>
                   </widget>
+                 </item>
+                 <item row="5" column="1">
+                  <widget class="QLineEdit" name="line_xcenter"/>
                  </item>
                  <item row="6" column="0">
                   <widget class="QLabel" name="label_10">
@@ -434,7 +441,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>813</width>
+     <width>809</width>
      <height>24</height>
     </rect>
    </property>

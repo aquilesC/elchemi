@@ -9,6 +9,7 @@ from PyQt5.QtWidgets import QFileDialog, QMainWindow, QScrollBar
 from elchemi.experiments.harmonic_analysis import AnalyzeModel
 from elchemi.experiments.live_acquisition import LiveAcquisition
 from elchemi.view import VIEW_FOLDER
+from elchemi.view.config_widget import ConfigWidget
 from elchemi.view.roi_plots import RoiWindow
 
 home_path = Path.home()
@@ -24,8 +25,6 @@ class DisplayWindow(QMainWindow):
             + add buttons for start and stop aquisition
             + add button for starting the digilent (separate from camera) waveforms
             + add toggle button for switching between real time view and FFT calculated harmonic view
-            + add entry fields to GUI for camera parameters and FFT params. this can be done by just editting a config file in the live-view, but will need a small widget.
-
         """
         super().__init__(parent=None)
         uic.loadUi(str(VIEW_FOLDER / 'GUI' / 'main_window.ui'), self)
@@ -61,6 +60,14 @@ class DisplayWindow(QMainWindow):
         layout.addWidget(self.fft_image_widget)
         layout.addWidget(self.fft_phase_widget)
 
+        self.config_widget = ConfigWidget()
+        self.config_widget.update_text(self.live_model.config)
+        self.config_widget.updated_config.connect(self.update_live_config)
+        self.update_live_params()
+        self.button_config_edit.clicked.connect(self.config_widget.show)
+
+    def update_live_config(self, config):
+        self.live_model.config.update(config)
         self.update_live_params()
 
     def update_live_params(self):

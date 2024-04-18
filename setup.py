@@ -19,5 +19,6 @@ setup(
         'pyyaml',
         'scipy',
         'matplotlib',
+        'pypylon',
         ]
     )

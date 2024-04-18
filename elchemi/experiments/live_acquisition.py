@@ -1,19 +1,14 @@
 import yaml
 from pypylon import pylon  # Python wrapper for Basler pylon Camera Software Suite
-import logging
 import threading
 import time
 import numpy as np
 from queue import Queue
-import sys
-from PyQt5.QtWidgets import QApplication, QMainWindow
-from PyQt5.QtCore import QTimer
-import pyqtgraph as pg
 from scipy.fft import rfft
-from elchemi.devices.DAQ.waveforms import DwfController as dwfc
+# from elchemi.devices.DAQ.waveforms import DwfController as dwfc
 
 
-class LiveAcquisition():
+class LiveAcquisition:
     def __init__(self, config_file):
         """
         :: ToDo..

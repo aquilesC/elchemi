@@ -6,7 +6,7 @@ from matplotlib.figure import Figure
 from PyQt5 import uic
 from PyQt5.QtWidgets import QFileDialog, QMainWindow
 
-from elchemi.experiments.analysis import AnalyzeModel
+from elchemi.experiments.harmonic_analysis import AnalyzeModel
 from elchemi.view import VIEW_FOLDER
 
 home_path = Path.home()

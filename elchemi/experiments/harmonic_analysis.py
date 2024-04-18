@@ -7,7 +7,8 @@ from numpy.fft import fftfreq
 from scipy.fft import fft
 from scipy.signal import spectrogram
 
-# from elchemi import param_folder  #uncomment if necessary
+from elchemi import param_folder
+
 
 class AnalyzeModel:
     metadata = {}
