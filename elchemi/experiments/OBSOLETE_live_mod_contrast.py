@@ -1,7 +1,6 @@
 """ This script uses threading to simulatneously capture camera images and process them live to project the fft analyzed images"""
 # import libraries
 import numpy as np
-import cv2
 import threading
 import time
 from collections import deque
