@@ -20,4 +20,3 @@ else:
  
 # import constants
 path.append(constants_path)
-import dwfconstants as constants

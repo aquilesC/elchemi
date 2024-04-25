@@ -8,8 +8,6 @@ find the fastest way of grabbing data.
 """
 import numpy as np
 from pypylon import pylon
-import matplotlib.pyplot as plt
-import matplotlib.animation as animation
 import time
 
 tl_factory = pylon.TlFactory.GetInstance()

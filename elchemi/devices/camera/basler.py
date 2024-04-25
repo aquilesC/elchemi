@@ -3,7 +3,7 @@ from logging import getLogger
 from threading import Thread
 
 import numpy as np
-from pypylon import pylon, _genicam
+from pypylon import pylon
 
 from elchemi.devices.camera.exceptions import CameraException, CameraNotFound, WrongCameraState
 
@@ -85,7 +85,7 @@ class BaslerCamera:
             self._acquisition_mode = mode
 
         elif mode == self.MODE_SINGLE_SHOT:
-            self.logger.debug(f'Setting buffer to 1')
+            self.logger.debug('Setting buffer to 1')
             self._acquisition_mode = mode
 
     def get_exposure(self):

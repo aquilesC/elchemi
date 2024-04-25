@@ -9,7 +9,6 @@ https://www.pythonforthelab.com/blog/getting-started-with-basler-cameras/
 from pypylon import pylon
 import matplotlib
 import matplotlib.pyplot as plt
-import time
 matplotlib.use('TkAgg')
 
 fig, ax = plt.subplots()
