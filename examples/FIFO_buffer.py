@@ -72,9 +72,17 @@ class CircularBuffer:
     def length(self):
         return self.buffer.shape[0]
 
+    def __len__(self):
+        return self.length
 
 
 if __name__ == "__main__":
-    fifo = CircularBuffer(shape=(500, 120, 120), dtype=np.uint8)
+    buffer = CircularBuffer(shape=(500, 120, 120), dtype=np.uint8)
     data = np.random.randint(0, 255, size=(500, 120, 120), dtype=np.uint8)
-    fifo.append(data)
+    buffer.append(data)
+    print(buffer.get_last_N(33).shape)
+    data = np.random.randint(0, 255, size=(75, 120, 120), dtype=np.uint8)
+    buffer.append(data)
+    print(buffer.length)
+    print(buffer.total_index)
+    print(buffer.get_values(510, 550).shape)
