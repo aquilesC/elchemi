@@ -1,5 +1,6 @@
 import threading
 
+
 import numpy as np
 
 
@@ -81,6 +82,8 @@ if __name__ == "__main__":
     data = np.random.randint(0, 255, size=(500, 120, 120), dtype=np.uint8)
     buffer.append(data)
     print(buffer.get_last_N(33).shape)
+    # Process(target=calculate_fft, args=buffer.get_last_N(33)) # TODO: This can be a speed bottleneck.
+    #  Sending arrays to a different process may need to serialize the array, and this will be slow
     data = np.random.randint(0, 255, size=(75, 120, 120), dtype=np.uint8)
     buffer.append(data)
     print(buffer.length)
