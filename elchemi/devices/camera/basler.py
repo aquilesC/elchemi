@@ -1,12 +1,14 @@
-import time
+import time, sys
 from logging import getLogger
-from threading import Thread
+from threading import Thread, Lock, Event
 
 import numpy as np
 from pypylon import pylon
+from PIL import Image
 
+sys.path.append('/Users/fg/LPL/Code/Elchemi_1/elchemi')
 from elchemi.devices.camera.exceptions import CameraException, CameraNotFound, WrongCameraState
-
+from elchemi.devices.buffer import Buffer
 
 class BaslerCamera:
     MODE_CONTINUOUS = 1
@@ -20,7 +22,7 @@ class BaslerCamera:
 
     _acquisition_mode = MODE_SINGLE_SHOT
 
-    def __init__(self, camera: str, initial_config: dict=None):
+    def __init__(self, camera: str, external_buffer_size, initial_config: dict={},):
         self.logger = getLogger(__name__)
         self.config = initial_config
         self.camera = camera
@@ -33,6 +35,7 @@ class BaslerCamera:
         self.initialized = False
         self.finalized = False
         self._buffer_size = None
+        self.external_buffer = Buffer('Queue', size = external_buffer_size)
         self.current_dtype = None
         self._driver = None
         self.width = 0
@@ -70,7 +73,17 @@ class BaslerCamera:
         self.width = self.get_width()
         self.height = self.get_height()
         self.pixel_format = self.get_pixelformat()
-
+        try:
+            self.max_buffer_size = self._driver.MaxBufferSize.GetValue()
+        except pylon.LogicalErrorException:         # Traps Missing Node exception in case the MaxBufferSize is not available in the given camera model 
+            self.max_buffer_size = None
+            self.logger.warning("MaxBufferSize attribute not found. Maximum buffer size is not directly accessible.")
+        
+        nodemap = self._driver.GetNodeMap()
+        pixel_format_node = nodemap.GetNode('PixelFormat')
+        if pixel_format_node is not None:
+            self.supported_pixel_formats = pixel_format_node.GetSymbolics()
+    
     def get_acquisition_mode(self):
         return self._acquisition_mode
 
@@ -167,28 +180,28 @@ class BaslerCamera:
         self.Y = (y_pos, y_pos + height)
 
     def get_pixelformat(self):
-        """ Pixel format must be one of Mono8, Mono12, Mono12p"""
+        """ Pixel format and data type for bit depth. This will be used to determine frame size and image arrays type casting """
         pixel_format = self._driver.PixelFormat.GetValue()
-        if pixel_format == 'Mono8':
+        if pixel_format == 'Mono8' or pixel_format == 'BayerRG8': #or pixel_format == 'YCbCr422_8' or pixel_format == 'BGR8' or pixel_format == 'BGR8':
             self.current_dtype = np.uint8
-        elif pixel_format == 'Mono12' or pixel_format == 'Mono12p':
+        elif pixel_format == 'Mono12' or pixel_format == 'Mono12p' or pixel_format == 'BayerRG16': # or pixel_format == 'BGR16' or pixel_format == 'BGR16':
             self.current_dtype = np.uint16
         else:
-            self.logger.warning(f'Current pixel format is {pixel_format} while only Mono8, Mono12 and Mono12p are supported')
+            self.logger.warning(f'Current pixel format is {pixel_format} while only Mono8/12/12p and Bayer8/16 are supported')
         return pixel_format
 
     def set_pixelformat(self, mode):
-        if mode not in ('Mono8', 'Mono12'):
-            raise ValueError('Supported modes are Mono8 and Mono12')
+        if mode not in ('Mono8', 'Mono12', 'BayerRG8'):
+            raise ValueError('Supported modes are Mono8, Mono12, and Bayer8/16')
 
         self.logger.info(f'Setting pixel format to {mode}')
         self._driver.PixelFormat.SetValue(mode)
-        if mode == 'Mono8':
+        if mode == 'Mono8' or mode == 'BayerRG8':
             self.current_dtype = np.uint8
         elif mode == 'Mono12' or mode == 'Mono12p':
             self.current_dtype = np.uint16
         else:
-            self.logger.warning(f'Trying to set pixel_format to {mode}, which is not valid')
+            self.logger.warning(f'Trying to set pixel_format to {mode}, which is not supported')
 
     def trigger_camera(self):
         self.logger.info(f'Triggering {self} with mode: {self._acquisition_mode}')
@@ -202,17 +215,34 @@ class BaslerCamera:
             # Calculate frame size in bytes
             frame_size = self.get_width() * self.get_height()
             if self.current_dtype == np.uint16:
-                frame_size *= 2
+                if self.pixel_format == 'Mono12' or self.pixel_format == 'Mono12p' or self.pixel_format == 'YCbCr422_8':
+                    frame_size *= 2         # For YCbCr422_8, for every 4 pixels we have 4 Y samples, 2 Cb samples, 2 Cr samples ==> 8 bytes per 4 pixels --> 2 bytes per pixel 
+                if self.pixel_format == 'RGB16' or self.pixel_format == 'BGR16'  or self.pixel_format == 'BayerRG16':
+                    frame_size *= 6
+            elif self.current_dtype == np.uint8:
+                if self.pixel_format == 'RGB8' or self.pixel_format == 'BGR8':
+                    frame_size *= 3
+            elif self.pixel_format == 'BayerRG8':
+                pass
             else:
                 raise CameraException(f'{self} frame dtype is not known to allocate the buffer')
 
             # Calculate the number of frames to be allocated based on the buffer size (in MB) and the frame size
             # This is useful to keep into account that the frame can be cropped via the ROI or Binning.
             self.logger.info(f'{self} - Frame size: {frame_size} bytes')
-            max_buffer_size = int(self.buffer_size.m_as('byte')/frame_size)
-            self.logger.info(f'{self} - Calculated max buffer {max_buffer_size}')
+            
+            # IF it was possible to find the maximum memory that the camera can allocate to buffers, we use 
+            # that to find the maximum number of buffers it can hold given our image type. If not, we set the 
+            # number of buffers to the maximum (is there a better way to handle this case?) and send a warning so
+            # that user can come and check this in case of slowing down in the camera functions
+            if self.max_buffer_size:
+                max_buffer_number = int(self.buffer_size.m_as('byte')/frame_size)
+                self.logger.info(f'{self} - Calculated max buffer {max_buffer_number}')
+            else:
+                self.logger.warning('Could not retrieve max buffer size, setting number of buffers to maximum')
+                max_buffer_number = self._driver.MaxNumBuffer.GetValue()
 
-            self._driver.MaxNumBuffer = max_buffer_size
+            self._driver.MaxNumBuffer = max_buffer_number
             self._driver.OutputQueueSize = self._driver.MaxNumBuffer.Value
             self._driver.StartGrabbing(pylon.GrabStrategy_OneByOne)
             self.logger.info('Grab Strategy: One by One')
@@ -233,16 +263,24 @@ class BaslerCamera:
         # self._driver.ExecuteSoftwareTrigger()
         self.logger.info('Executed Software Trigger')
 
+    def get_frame_rate(self):
+        return  self._driver.ResultingFrameRate.GetValue()
+    
+    def set_framerate(self, frame_rate):
+        self._driver.AcquisitionFrameRate.SetValue(frame_rate)
+
     def read_camera(self) -> list:
         img = []
         mode = self.get_acquisition_mode()
-        exposure = self.get_exposure() * 1000  # Exposure in milliseconds
+        exposure = self.get_exposure()   # Exposure in milliseconds
         self.logger.debug(f'Grabbing mode: {mode}')
-        if mode == self.MODE_SINGLE_SHOT or mode == self.MODE_LAST:
-            grab = self._driver.RetrieveResult(int(exposure + 100), pylon.TimeoutHandling_Return)
+        if mode == self.MODE_SINGLE_SHOT or mode == self.MODE_LAST and self._driver.IsGrabbing():
+            grab = self._driver.RetrieveResult(int(exposure), pylon.TimeoutHandling_Return)
             if grab and grab.GrabSucceeded():
                 img = [grab.GetArray().T]
                 self.temp_image = img[-1]
+                self.external_buffer.frame_rates.append(self.get_frame_rate())
+                self.external_buffer.put(img)
                 grab.Release()
             if mode == self.MODE_SINGLE_SHOT:
                 self._driver.StopGrabbing()
@@ -251,9 +289,10 @@ class BaslerCamera:
             if not self._driver.IsGrabbing():
                 raise WrongCameraState('You need to trigger the camera before reading')
             num_buffers = self._driver.NumReadyBuffers.Value
+            print('Num Buffers %s'%num_buffers)
             if num_buffers > 0:
                 if num_buffers > 0.9*self._driver.OutputQueueSize.Value:
-                    self.logger.warning(f'{self} Buffer filled to 90% num buffers: {num_buffers}')
+                    self.logger.warning(f'{self} Basler Buffer filled to 90% num buffers: {num_buffers}')
                 img = [np.zeros((self.width, self.height), dtype=self.current_dtype)] * num_buffers
                 tot_frames = 0
                 for i in range(num_buffers):
@@ -261,6 +300,10 @@ class BaslerCamera:
                     if grab:
                         if grab.GrabSucceeded():
                             img[i] = grab.GetArray().T
+                            self.temp_image = img[i]
+                            if not self.external_buffer.pause_storage.is_set():
+                                self.external_buffer.frame_rates.append(self.get_frame_rate())
+                                self.external_buffer.put(img)
                             grab.Release()
                             tot_frames += 1
                         else:
@@ -274,18 +317,20 @@ class BaslerCamera:
                 img = img[:tot_frames]
         if len(img) >= 1:
             self.temp_image = img[-1]
-
         return img
 
     def continuous_reads(self):
-        self.continuous_reads_running = True
         self.keep_reading = True
-        while self.keep_reading:
+        self.continuous_reads_running = True
+        i = 0
+        while not self._stop_read.is_set():
+            
+            i += 1
+            self.trigger_camera()
             imgs = self.read_camera()
+            
             if len(imgs) >= 1:
-                for img in imgs:
-                    # TODO: Here is the place to do something with the acquired images!
-                    continue
+                self.temp_image = imgs[-1]
             time.sleep(.001)
         self.continuous_reads_running = False
 
@@ -293,17 +338,23 @@ class BaslerCamera:
         if self.continuous_reads_running:
             self.logger.warning("Trying to start a continuous read thread again!")
             return
-        self.thread_reading = Thread(target=self.continuous_reads)
-        self.thread_reading.start()
+
+        self._stop_read = Event()
         self.trigger_camera()
+        
+        self.reading_thread = Thread(target=self.continuous_reads)
+        self.reading_thread.start()
+        
 
     def stop_continuous_reads(self):
         if not self.continuous_reads_running:
             self.logger.warning("Trying to stop continuous reads, but it's not running")
             return
-        self.keep_reading = False
-        time.sleep(self.get_exposure()*1000)
+        self._stop_read.set()
+        self.reading_thread.join()
+        del self.reading_thread
         self._driver.StopGrabbing()
+
         t0 = time.time()
         while self.continuous_reads_running:
             if time.time() - t0 > 10:
@@ -328,6 +379,7 @@ class BaslerCamera:
             return
 
         self.stop_continuous_reads()
+        self._driver.StopGrabbing()
         self.finalized = True
 
     def __str__(self):
@@ -336,20 +388,59 @@ class BaslerCamera:
         return super().__str__()
 
 
+'''SIGNLE IMAGE
 if __name__ == '__main__':
-    cam = BaslerCamera('da')
+    cam = BaslerCamera('puA')
     cam.initialize()
-    cam.set_exposue(10000) # 10ms
+    cam.set_exposue(1000) # 10ms
     print(cam.get_exposure())
     print(cam.config)
-    cam.config['roi'] = ((16, 1200-1), (16, 800-1))
+    cam.config = {}
+    cam.config['ROI'] = ((16, 1200-1), (16, 800-1))
     cam.set_ROI(cam.config['ROI'])
     cam.set_autoexposure('Off')
     cam.set_autogain('Off')
     cam.set_acquisition_mode(cam.MODE_SINGLE_SHOT)
+    time.sleep(1)
+
+    for i in range(10):
+        cam.trigger_camera()
+        print('Capturing image %s'%i)
+        img = cam.read_camera()
+        if img:
+            image = Image.fromarray(img[-1].T)
+            image.show()
+            print('Image %s successful \n Shape %s'%(i,np.shape(img[-1].T)))
+        print(img)'''
+
+
+if __name__ == '__main__':
+    cam = BaslerCamera('puA')
+    cam.initialize()
+    cam.set_exposue(1000) # 10ms
+    print(cam.get_exposure())
+    print(cam.config)
+    
+    cam.config = {}
+    cam.config['ROI'] = ((16, 1200-1), (16, 800-1))
+    cam.set_ROI(cam.config['ROI'])
+    cam.set_autoexposure('Off')
+    cam.set_autogain('Off')
+    cam.set_acquisition_mode(cam.MODE_LAST)
     cam.trigger_camera()
     time.sleep(1)
-    for i in range(10):
-        img = cam.read_camera()
-        print(img)
+
+    cam.start_continuous_reads()
+    print(cam.get_frame_rate())
+    cam.stop_continuous_reads()
+
+    #for i in range(10):
+    #    print('Capturing image %s'%i)
+    #    img = cam.read_camera()
+    #    if img:
+    #        image = Image.fromarray(img[-1].T)
+    #        image.show()
+    #        print('Image %s successful \n Shape %s'%(i,np.shape(img[-1].T)))
+    #    print(img)
+
         

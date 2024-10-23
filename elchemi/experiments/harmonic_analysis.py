@@ -119,7 +119,7 @@ class AnalyzeModel:
         f, t, Sxx = spectrogram(added, fs=self.frame_rate, axis=0, mode='complex', noverlap=overlap)
         return f, t, Sxx
 
-    def make_full_fft(self, freq, min_cycles):
+    def make_full_fft(self, freq, min_cycles, frame_rate, pixel_format = None):
         """ Calculates the FFT on the entire image stack. It splits the data into "cycles" which is the number of
         frames that it takes for a full oscillation, based on the external driving frequency. It grabs a minimum
         number of oscillations before calculating the FFT, and it makes a sliding window that jumps one cycle at a
@@ -139,6 +139,19 @@ class AnalyzeModel:
             The code forces a sliding window that jumps one cycle each time. It may be wise of give flexibility to
             select the window.
         """
+        print(f'Data: {self.data}\n\n\n')
+        print(f'Type: {np.shape(self.data)}\n\n\n')
+        print(f'FRAME RATE: {self.frame_rate}')
+
+        if pixel_format == 'BayerRG8':
+            self.data = np.squeeze(self.data, axis = 1)
+            green_ch1 = self.data[:,0::2, 0::2]
+            green_ch2 = self.data[:,1::2, 1::2]
+            self.data = (green_ch1.astype(np.float32) + green_ch2.astype(np.float32))/2.0
+            print(f'\n\n self data : {self.data}')
+        if frame_rate:
+            self.frame_rate = frame_rate
+
         min_frames = int(self.frame_rate / freq)  # How many frames to record a full oscillation
         cycle_frames = min_frames * min_cycles  # How many frames there are in the total integration period
 
@@ -152,6 +165,7 @@ class AnalyzeModel:
 
         num_calculations = int(self.data.shape[0] / min_frames)  # jump a cycle to speed up FFT calculation
 
+        print(f'\n\n\n\n \t self.data.shape[0] {num_calculations} and self.data.shape[2] {self.data.shape[2]}')
         self.fft_data = np.zeros((num_calculations, self.data.shape[1], self.data.shape[2]),
                                  dtype=complex)
 

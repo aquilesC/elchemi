@@ -3,20 +3,23 @@ from pathlib import Path
 import numpy as np
 import pyqtgraph as pg
 from PyQt5 import uic
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QTimer
 from PyQt5.QtWidgets import QFileDialog, QMainWindow, QScrollBar
+from threading import Thread, Event
 
 from elchemi.experiments.harmonic_analysis import AnalyzeModel
 from elchemi.experiments.live_acquisition import LiveAcquisition
 from elchemi.view import VIEW_FOLDER
 from elchemi.view.config_widget import ConfigWidget
 from elchemi.view.roi_plots import RoiWindow
+from elchemi.devices.camera.basler import BaslerCamera
+from elchemi.devices.buffer import Buffer
 
 home_path = Path.home()
 
 
 class DisplayWindow(QMainWindow):
-    def __init__(self, model: AnalyzeModel = None, live_model: LiveAcquisition = None):
+    def __init__(self, model: AnalyzeModel = None, live_model: LiveAcquisition = None, refresh_rate = 500, cam = 'puA', fft_refresh_rate = 10000, fft_images_window = 500):
         """
         :param measurement model: Model used to analyze the data
 
@@ -29,9 +32,16 @@ class DisplayWindow(QMainWindow):
         super().__init__(parent=None)
         uic.loadUi(str(VIEW_FOLDER / 'GUI' / 'main_window.ui'), self)
         self.setWindowTitle('Potentiodynamic Data Exploration')
+
+        # Menu actions
         self.action_open.triggered.connect(self.load_data)
+        self.action_connect.triggered.connect(self.connect_balser)
+        self.action_close.triggered.connect(self.disconnect_basler)
+
         self.analyze_model = model
         self.live_model = live_model
+        self.basler = BaslerCamera(camera = cam, external_buffer_size = fft_images_window)
+        self.refresh_rate = refresh_rate
 
         self.frame_selector = QScrollBar(Qt.Vertical)
         self.image_widget = pg.ImageView()
@@ -44,9 +54,19 @@ class DisplayWindow(QMainWindow):
         self.frame_selector.valueChanged.connect(self.update_image)
         self.add_roi_button.clicked.connect(self.add_roi)
         self.plot_roi_button.clicked.connect(self.plot_roi)
-        self.filter_data_button.clicked.connect(self.calculate_fft)
+        self.filter_data_button.clicked.connect(self.handle_fft)
         self.roi = None
         self.is_open = False
+        self.freerun_checkbox.stateChanged.connect(self.start_freerun)
+        self.update_config.clicked.connect(self.update_cam)
+        self.gain_freerun.setText("10")
+        self.exposure_freerun.setText("5000")
+        self.framerate_freerun.setText("200")
+        self.height_freerun.setText('600')
+        self.width_freerun.setText('600')
+        self.xcenter_freerun.setText('204')
+        self.ycenter_freerun.setText('204')
+        self.pixel_format_box.currentIndexChanged.connect(self.change_pixel_format)
 
         self.fft_image_widget = pg.ImageView()
         self.fft_image_widget.setPredefinedGradient('thermal')
@@ -54,6 +74,9 @@ class DisplayWindow(QMainWindow):
         self.fft_phase_widget.setPredefinedGradient('cyclic')
         self.fft_selector = QScrollBar(Qt.Vertical)
         self.fft_selector.valueChanged.connect(self.update_fft)
+        self.fft_images_window = fft_images_window
+        self.fft_refresh_rate = fft_refresh_rate
+        self.fft_thread = None
 
         layout = self.fft_widget.layout()
         layout.addWidget(self.fft_selector)
@@ -65,7 +88,7 @@ class DisplayWindow(QMainWindow):
         self.config_widget.updated_config.connect(self.update_live_config)
         self.update_live_params()
         self.button_config_edit.clicked.connect(self.config_widget.show)
-
+        
     def update_live_config(self, config):
         self.live_model.config.update(config)
         self.update_live_params()
@@ -90,7 +113,73 @@ class DisplayWindow(QMainWindow):
         self.line_filename.setText(str(config_data['filename']))
         self.line_totalframes.setText(str(config_data['total_frames']))
 
+    def connect_balser(self):
+        self.basler.initialize()
+        self.basler.set_acquisition_mode(self.basler.MODE_LAST)
+
+        self.pixel_format_box.clear()
+        for pixel_fmt in self.basler.supported_pixel_formats:
+            self.pixel_format_box.addItem(pixel_fmt)
+    
+    def start_freerun(self):
+        if self.refresh_rate_value.text():
+            try:
+                print(float(self.refresh_rate_value.text()))
+                self.refresh_rate = float(self.refresh_rate_value.text())
+            except ValueError as e:
+                print(f'Invalid refresh rate for live view window chosen:\t{e}')
+
+        self.timer = QTimer(self)
+        self.timer.timeout.connect(self.update_raw_data)
+        self.timer.start(self.refresh_rate)
+
+        self.basler.start_continuous_reads()
+
+
+    def disconnect_basler(self):
+        self.basler.finalize()
+        self.timer.stop()
+        self.timer.timeout.disconnect()
+        del self.timer
+
+        if hasattr(self, 'fft_timer'):
+            self.fft_timer.stop()
+            self.fft_timer.timeout.disconnect()
+            del self.fft_timer
+
+    def update_raw_data(self):
+        '''Method to update the image displayed in the raw data window. It could be merged with update_image in the future.'''
+        if hasattr(self.basler, 'temp_image'):
+            self.image_widget.setImage(self.basler.temp_image)
+        else:
+            self.basler.logger.info('Tried to fetch image when none were available.')
+
+    def update_cam(self):
+        if self.exposure_freerun.text():
+            try:
+                self.basler.set_exposue(float(self.exposure_freerun.text()))
+            except ValueError as e:
+                raise Warning(f'Exposure not updated, value-error exception raised: {e}')
+        if self.gain_freerun.text():
+            try:
+                self.basler.set_gain(float(self.gain_freerun.text()))
+            except ValueError as e:
+                raise Warning(f'Gain not updated, value-error exception raised: {e}')
+        if self.framerate_freerun.text():
+            try:
+                self.basler.set_framerate(float(self.framerate_freerun.text()))
+            except ValueError as e:
+                raise Warning(f'Framerate not updated, value-error exception raised: {e}')
+        if self.width_freerun.text() and self.height_freerun.text() and self.xcenter_freerun.text() and self.ycenter_freerun.text():
+            X = (float(self.xcenter_freerun.text()), float(self.xcenter_freerun.text())+float(self.width_freerun.text()))
+            Y = (float(self.ycenter_freerun.text()), float(self.ycenter_freerun.text())+float(self.height_freerun.text()))
+            try:
+                self.basler.set_ROI((X,Y))
+            except ValueError as e:
+                raise Warning(f'Image Width not updated, value-error exception raised: {e}')
+    
     def load_data(self):
+        self.loaded_data = True
         if self.is_open:
             self.close_data()
 
@@ -136,10 +225,49 @@ class DisplayWindow(QMainWindow):
         self.roi_window.set_roi(X, Y)
         self.roi_window.show()
 
-    def calculate_fft(self):
+    def handle_fft(self):
+        if hasattr(self, 'loaded_data'): # If data was loaded run standard fft
+            self.calculate_fft(frame_rate=None)
+        else:
+            self.fft_timer = QTimer(self)
+            self.fft_timer.timeout.connect(self.update_fft_data)
+            self.fft_timer.start(self.fft_refresh_rate)
+
+    def update_fft_data(self):
+        img_list = []
+        self.basler.external_buffer.pause_storage.set()
+        while not self.basler.external_buffer.get_buffer().empty():
+            img_list.append(self.basler.external_buffer.get_buffer().get())
+        img_list.reverse()
+        self.analyze_model.data = np.array(img_list)
+        self.analyze_model.frame_rate = np.mean(np.array(self.basler.external_buffer.frame_rates))
+        self.basler.external_buffer.pause_storage.clear()
+        print(f'Average Camera Frame Rate: {self.analyze_model.frame_rate} \nStandard Deviation Frame Rate: {np.array(np.std(self.basler.external_buffer.frame_rates))}')
+
+        if self.fft_thread is None or not self.fft_thread.is_alive():
+            self._stop_fft = Event()
+            self.fft_thread = Thread(target=self.calculate_fft, args=[np.mean(np.array(self.basler.external_buffer.frame_rates))])
+            self.fft_thread.start()
+        else:
+            self.fft_timer.stop()
+            self._stop_fft.wait()
+            self.fft_timer.start(self.fft_refresh_rate)
+            self._stop_fft.clear()        
+        
+        # Here we have a thread starter and runner 
+
+        # Thread need to wait for previous
+
+        # Then make_full_fft in live analysis will handle the different types of images and data
+
+    def change_pixel_format(self):
+        self.basler.set_pixelformat(self.pixel_format_box.currentText())
+
+    def calculate_fft(self, frame_rate):
         freq = float(self.frequency_line.text())
         cycles = int(self.min_cycles_line.text())
-        self.analyze_model.make_full_fft(freq, cycles)
+
+        self.analyze_model.make_full_fft(freq, cycles, frame_rate = frame_rate, pixel_format= self.basler.get_pixelformat())
 
         self.fft_selector.setMinimum(0)
         self.fft_selector.setMaximum(self.analyze_model.fft_data.shape[0] - 1)
@@ -148,6 +276,11 @@ class DisplayWindow(QMainWindow):
 
         self.fft_image_widget.setImage(np.abs(self.analyze_model.fft_data[0, :, :]))
         self.fft_phase_widget.setImage(np.angle(self.analyze_model.fft_data[0, :, :]))
+        if hasattr(self, 'loaded_data'):
+            self._stop_read.set()
+            self.fft_thread.join()
+            del self.fft_thread
+
 
     def close_data(self):
         self.frame_selector.setEnabled(False)

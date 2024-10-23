@@ -1,4 +1,5 @@
 import sys
+sys.path.append('/Users/fg/LPL/Code/Project/Software/Elchemi_1/elchemi')
 
 import click
 from PyQt5.QtWidgets import QApplication
@@ -19,3 +20,5 @@ def start(config):
     win.show()
 
     sys.exit(app.exec())
+
+start()
