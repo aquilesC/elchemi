@@ -6,15 +6,15 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>809</width>
-    <height>860</height>
+    <width>1512</width>
+    <height>806</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>MainWindow</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <layout class="QHBoxLayout" name="horizontalLayout_3">
+   <layout class="QVBoxLayout" name="verticalLayout_5">
     <item>
      <widget class="QWidget" name="data_widget" native="true">
       <layout class="QHBoxLayout" name="horizontalLayout_2">
@@ -39,74 +39,237 @@
              <property name="styleSheet">
               <string notr="true"/>
              </property>
-             <layout class="QVBoxLayout" name="verticalLayout_3">
+             <layout class="QVBoxLayout" name="verticalLayout_2">
               <item>
                <widget class="QWidget" name="widget_3" native="true">
-                <layout class="QVBoxLayout" name="verticalLayout_4">
-                 <item>
-                  <widget class="QLabel" name="label">
-                   <property name="text">
-                    <string>Filename:</string>
-                   </property>
-                   <property name="buddy">
-                    <cstring>filename_name</cstring>
-                   </property>
-                  </widget>
-                 </item>
-                 <item>
-                  <widget class="QLineEdit" name="filename_name">
-                   <property name="enabled">
-                    <bool>false</bool>
-                   </property>
-                   <property name="minimumSize">
-                    <size>
-                     <width>150</width>
-                     <height>0</height>
-                    </size>
-                   </property>
-                   <property name="maximumSize">
-                    <size>
-                     <width>5000</width>
-                     <height>5000</height>
-                    </size>
-                   </property>
-                  </widget>
-                 </item>
-                </layout>
+                <widget class="QLabel" name="label">
+                 <property name="geometry">
+                  <rect>
+                   <x>0</x>
+                   <y>10</y>
+                   <width>58</width>
+                   <height>16</height>
+                  </rect>
+                 </property>
+                 <property name="text">
+                  <string>Filename:</string>
+                 </property>
+                 <property name="buddy">
+                  <cstring>filename_name</cstring>
+                 </property>
+                </widget>
+                <widget class="QLineEdit" name="filename_name">
+                 <property name="enabled">
+                  <bool>false</bool>
+                 </property>
+                 <property name="geometry">
+                  <rect>
+                   <x>70</x>
+                   <y>10</y>
+                   <width>150</width>
+                   <height>20</height>
+                  </rect>
+                 </property>
+                 <property name="minimumSize">
+                  <size>
+                   <width>150</width>
+                   <height>0</height>
+                  </size>
+                 </property>
+                 <property name="maximumSize">
+                  <size>
+                   <width>50</width>
+                   <height>20</height>
+                  </size>
+                 </property>
+                </widget>
+                <widget class="QPushButton" name="add_roi_button">
+                 <property name="geometry">
+                  <rect>
+                   <x>-10</x>
+                   <y>40</y>
+                   <width>238</width>
+                   <height>32</height>
+                  </rect>
+                 </property>
+                 <property name="toolTip">
+                  <string>Adds a ROI box to the image to perform a quick visualization</string>
+                 </property>
+                 <property name="text">
+                  <string>Add Roi</string>
+                 </property>
+                </widget>
+                <widget class="QPushButton" name="plot_roi_button">
+                 <property name="geometry">
+                  <rect>
+                   <x>-10</x>
+                   <y>80</y>
+                   <width>238</width>
+                   <height>32</height>
+                  </rect>
+                 </property>
+                 <property name="toolTip">
+                  <string>Plot the signal, FFT, and spectrogram on the selected ROI</string>
+                 </property>
+                 <property name="text">
+                  <string>Plot</string>
+                 </property>
+                </widget>
+                <widget class="QGroupBox" name="groupBox_5">
+                 <property name="geometry">
+                  <rect>
+                   <x>0</x>
+                   <y>130</y>
+                   <width>226</width>
+                   <height>291</height>
+                  </rect>
+                 </property>
+                 <property name="title">
+                  <string>Camera</string>
+                 </property>
+                 <layout class="QFormLayout" name="formLayout_5">
+                  <item row="0" column="0">
+                   <widget class="QLabel" name="label_32">
+                    <property name="text">
+                     <string>Exposure</string>
+                    </property>
+                    <property name="buddy">
+                     <cstring>line_exposure</cstring>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="0" column="1">
+                   <widget class="QLineEdit" name="exposure_freerun"/>
+                  </item>
+                  <item row="1" column="0">
+                   <widget class="QLabel" name="label_33">
+                    <property name="text">
+                     <string>Gain</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="1" column="1">
+                   <widget class="QLineEdit" name="gain_freerun"/>
+                  </item>
+                  <item row="2" column="0">
+                   <widget class="QLabel" name="label_34">
+                    <property name="text">
+                     <string>Frame Rate</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="2" column="1">
+                   <widget class="QLineEdit" name="framerate_freerun"/>
+                  </item>
+                  <item row="3" column="0">
+                   <widget class="QLabel" name="label_35">
+                    <property name="text">
+                     <string>Width</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="3" column="1">
+                   <widget class="QLineEdit" name="width_freerun"/>
+                  </item>
+                  <item row="4" column="0">
+                   <widget class="QLabel" name="label_36">
+                    <property name="text">
+                     <string>Height</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="4" column="1">
+                   <widget class="QLineEdit" name="height_freerun"/>
+                  </item>
+                  <item row="5" column="0">
+                   <widget class="QLabel" name="label_37">
+                    <property name="text">
+                     <string>X-Center</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="5" column="1">
+                   <widget class="QLineEdit" name="xcenter_freerun"/>
+                  </item>
+                  <item row="6" column="0">
+                   <widget class="QLabel" name="label_38">
+                    <property name="text">
+                     <string>Y-Center</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="6" column="1">
+                   <widget class="QLineEdit" name="ycenter_freerun"/>
+                  </item>
+                  <item row="7" column="0">
+                   <widget class="QLabel" name="label_19">
+                    <property name="text">
+                     <string>Autogain</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="8" column="0">
+                   <widget class="QLabel" name="label_20">
+                    <property name="text">
+                     <string>Pixel Format:</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="8" column="1">
+                   <widget class="QComboBox" name="pixel_format_box"/>
+                  </item>
+                 </layout>
+                </widget>
+                <widget class="QCheckBox" name="freerun_checkbox">
+                 <property name="geometry">
+                  <rect>
+                   <x>80</x>
+                   <y>500</y>
+                   <width>72</width>
+                   <height>20</height>
+                  </rect>
+                 </property>
+                 <property name="text">
+                  <string>Freerun</string>
+                 </property>
+                </widget>
+                <widget class="QLineEdit" name="refresh_rate_value">
+                 <property name="geometry">
+                  <rect>
+                   <x>60</x>
+                   <y>470</y>
+                   <width>119</width>
+                   <height>21</height>
+                  </rect>
+                 </property>
+                </widget>
+                <widget class="QLabel" name="label_18">
+                 <property name="geometry">
+                  <rect>
+                   <x>20</x>
+                   <y>470</y>
+                   <width>60</width>
+                   <height>16</height>
+                  </rect>
+                 </property>
+                 <property name="text">
+                  <string>FPS</string>
+                 </property>
+                </widget>
+                <widget class="QPushButton" name="update_config">
+                 <property name="geometry">
+                  <rect>
+                   <x>20</x>
+                   <y>430</y>
+                   <width>181</width>
+                   <height>32</height>
+                  </rect>
+                 </property>
+                 <property name="text">
+                  <string>Update Configuration</string>
+                 </property>
+                </widget>
                </widget>
-              </item>
-              <item>
-               <widget class="QPushButton" name="add_roi_button">
-                <property name="toolTip">
-                 <string>Adds a ROI box to the image to perform a quick visualization</string>
-                </property>
-                <property name="text">
-                 <string>Add Roi</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QPushButton" name="plot_roi_button">
-                <property name="toolTip">
-                 <string>Plot the signal, FFT, and spectrogram on the selected ROI</string>
-                </property>
-                <property name="text">
-                 <string>Plot</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <spacer name="verticalSpacer_2">
-                <property name="orientation">
-                 <enum>Qt::Vertical</enum>
-                </property>
-                <property name="sizeHint" stdset="0">
-                 <size>
-                  <width>20</width>
-                  <height>40</height>
-                 </size>
-                </property>
-               </spacer>
               </item>
              </layout>
             </widget>
@@ -132,65 +295,80 @@
                <height>16777215</height>
               </size>
              </property>
-             <layout class="QFormLayout" name="formLayout_3">
-              <item row="0" column="0">
-               <widget class="QLabel" name="label_2">
-                <property name="text">
-                 <string>Filter Freq (Hz)</string>
-                </property>
-                <property name="buddy">
-                 <cstring>frequency_line</cstring>
-                </property>
-               </widget>
-              </item>
-              <item row="0" column="1">
-               <widget class="QLineEdit" name="frequency_line">
-                <property name="toolTip">
-                 <string>Frequency to filter the data after a Fourier Transform</string>
-                </property>
-               </widget>
-              </item>
-              <item row="1" column="0">
-               <widget class="QLabel" name="label_3">
-                <property name="text">
-                 <string>Min cycles</string>
-                </property>
-                <property name="buddy">
-                 <cstring>min_cycles_line</cstring>
-                </property>
-               </widget>
-              </item>
-              <item row="1" column="1">
-               <widget class="QLineEdit" name="min_cycles_line">
-                <property name="toolTip">
-                 <string>For how many cycles should the signal be integrated before calculating the FFT</string>
-                </property>
-               </widget>
-              </item>
-              <item row="2" column="0">
-               <widget class="QPushButton" name="filter_data_button">
-                <property name="toolTip">
-                 <string>Use the frequency and number of cycles to perform an FFT over all the images</string>
-                </property>
-                <property name="text">
-                 <string>Filter Data</string>
-                </property>
-               </widget>
-              </item>
-              <item row="3" column="0">
-               <spacer name="verticalSpacer">
-                <property name="orientation">
-                 <enum>Qt::Vertical</enum>
-                </property>
-                <property name="sizeHint" stdset="0">
-                 <size>
-                  <width>20</width>
-                  <height>40</height>
-                 </size>
-                </property>
-               </spacer>
-              </item>
-             </layout>
+             <widget class="QLabel" name="label_2">
+              <property name="geometry">
+               <rect>
+                <x>13</x>
+                <y>12</y>
+                <width>92</width>
+                <height>16</height>
+               </rect>
+              </property>
+              <property name="text">
+               <string>Filter Freq (Hz)</string>
+              </property>
+              <property name="buddy">
+               <cstring>frequency_line</cstring>
+              </property>
+             </widget>
+             <widget class="QLineEdit" name="frequency_line">
+              <property name="geometry">
+               <rect>
+                <x>113</x>
+                <y>12</y>
+                <width>75</width>
+                <height>21</height>
+               </rect>
+              </property>
+              <property name="toolTip">
+               <string>Frequency to filter the data after a Fourier Transform</string>
+              </property>
+             </widget>
+             <widget class="QLabel" name="label_3">
+              <property name="geometry">
+               <rect>
+                <x>40</x>
+                <y>43</y>
+                <width>65</width>
+                <height>16</height>
+               </rect>
+              </property>
+              <property name="text">
+               <string>Min cycles</string>
+              </property>
+              <property name="buddy">
+               <cstring>min_cycles_line</cstring>
+              </property>
+             </widget>
+             <widget class="QLineEdit" name="min_cycles_line">
+              <property name="geometry">
+               <rect>
+                <x>113</x>
+                <y>43</y>
+                <width>75</width>
+                <height>21</height>
+               </rect>
+              </property>
+              <property name="toolTip">
+               <string>For how many cycles should the signal be integrated before calculating the FFT</string>
+              </property>
+             </widget>
+             <widget class="QPushButton" name="filter_data_button">
+              <property name="geometry">
+               <rect>
+                <x>6</x>
+                <y>74</y>
+                <width>105</width>
+                <height>32</height>
+               </rect>
+              </property>
+              <property name="toolTip">
+               <string>Use the frequency and number of cycles to perform an FFT over all the images</string>
+              </property>
+              <property name="text">
+               <string>Filter Data</string>
+              </property>
+             </widget>
             </widget>
            </item>
           </layout>
@@ -441,8 +619,8 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>809</width>
-     <height>24</height>
+     <width>1512</width>
+     <height>37</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -452,7 +630,15 @@
     <addaction name="action_open"/>
     <addaction name="actionExport_Data"/>
    </widget>
+   <widget class="QMenu" name="menuCa_era">
+    <property name="title">
+     <string>Camera</string>
+    </property>
+    <addaction name="action_connect"/>
+    <addaction name="action_close"/>
+   </widget>
    <addaction name="menuFile"/>
+   <addaction name="menuCa_era"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <widget class="QToolBar" name="toolBar">
@@ -485,6 +671,16 @@
   <action name="actionExport_Data">
    <property name="text">
     <string>Export Data</string>
+   </property>
+  </action>
+  <action name="action_connect">
+   <property name="text">
+    <string>Connect</string>
+   </property>
+  </action>
+  <action name="action_close">
+   <property name="text">
+    <string>Disconnect</string>
    </property>
   </action>
  </widget>
