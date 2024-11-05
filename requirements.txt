@@ -1,3 +1,5 @@
+#FIXME: Check what dependencies are the core ones and remove the others.
+
 click==8.1.7
 contourpy==1.2.1
 cycler==0.12.1

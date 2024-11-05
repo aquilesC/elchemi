@@ -8,11 +8,11 @@ setup(
     entry_points={
         'console_scripts': ["elchemi=elchemi.start:start", ]
         },
-    install_requires=[
+    install_requires=[ #FIXME: Check parity with requirements.txt
         'numpy',
         'pyqtgraph',
         'dwf',
-        'pyqt5',
+        'pyqt5', #FIXME: Explore usage of Qt6 (and perhaps move to PySide6)
         'h5py',
         'pylon',
         'click',
