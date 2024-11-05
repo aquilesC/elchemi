@@ -4,9 +4,7 @@ from threading import Thread, Lock, Event
 
 import numpy as np
 from pypylon import pylon
-from PIL import Image
 
-sys.path.append('/Users/fg/LPL/Code/Elchemi_1/elchemi')
 from elchemi.devices.camera.exceptions import CameraException, CameraNotFound, WrongCameraState
 from elchemi.devices.buffer import Buffer
 
@@ -386,32 +384,6 @@ class BaslerCamera:
         if self.friendly_name:
             return f"Camera {self.friendly_name}"
         return super().__str__()
-
-
-'''SIGNLE IMAGE
-if __name__ == '__main__':
-    cam = BaslerCamera('puA')
-    cam.initialize()
-    cam.set_exposue(1000) # 10ms
-    print(cam.get_exposure())
-    print(cam.config)
-    cam.config = {}
-    cam.config['ROI'] = ((16, 1200-1), (16, 800-1))
-    cam.set_ROI(cam.config['ROI'])
-    cam.set_autoexposure('Off')
-    cam.set_autogain('Off')
-    cam.set_acquisition_mode(cam.MODE_SINGLE_SHOT)
-    time.sleep(1)
-
-    for i in range(10):
-        cam.trigger_camera()
-        print('Capturing image %s'%i)
-        img = cam.read_camera()
-        if img:
-            image = Image.fromarray(img[-1].T)
-            image.show()
-            print('Image %s successful \n Shape %s'%(i,np.shape(img[-1].T)))
-        print(img)'''
 
 
 if __name__ == '__main__':

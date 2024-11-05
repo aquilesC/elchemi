@@ -12,6 +12,8 @@ daq:
   amplitudew1: 0.1
   frequencyw2: 10
   amplitudew2: 5
+  device: 0
+  config_number: 0
 
 data:
   min_cycles: 6
