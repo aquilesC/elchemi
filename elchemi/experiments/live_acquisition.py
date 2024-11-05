@@ -5,6 +5,10 @@ import time
 import numpy as np
 from queue import Queue
 from scipy.fft import rfft
+
+from elchemi.devices.camera.basler import BaslerCamera
+
+
 # from elchemi.devices.DAQ.waveforms import DwfController as dwfc
 
 
@@ -26,17 +30,9 @@ class LiveAcquisition:
             self.config = yaml.load(f, Loader=yaml.FullLoader)
 
     def connect_devices(self):
-
-        # this method should be connected to a separate button on the live_acquisition GUI window to connect devices.
-        # this allows the GUI to be also useful for pure display of saved date, even without connection to devices
-        self.camera = pylon.InstantCamera(pylon.TlFactory.GetInstance().CreateFirstDevice())
-        self.camera.Open()
-        # Display a list of devices and their possible configurations
-        devs = dwfc.enumerate_devices()
-        dwfc.print_device_list(devs)
-        # Create object for device number 0, with config number 0
-        self.daq = dwfc(0, 0)
-
+        self.camera = BaslerCamera(self.config['camera']['name'])
+        self.camera.initialize()
+        self.daq = dwfc(self.config['daq']['device'], self.config['daq']['config_number'])
 
     def daq_signal_on(self):
         """

@@ -20,9 +20,9 @@ class BaslerCamera:
 
     _acquisition_mode = MODE_SINGLE_SHOT
 
-    def __init__(self, camera: str, external_buffer_size, initial_config: dict={},):
+    def __init__(self, camera: str, external_buffer_size, initial_config: dict=None):
         self.logger = getLogger(__name__)
-        self.config = initial_config
+        self.config = initial_config if initial_config else {}
         self.camera = camera
         self.friendly_name = ''
         self.free_run_running = False
@@ -50,6 +50,8 @@ class BaslerCamera:
         """
 
         self.logger.debug('Initializing Basler Camera')
+        if self.initialized:
+            self.logger.warning('Camera already initialized')
         tl_factory = pylon.TlFactory.GetInstance()
         devices = tl_factory.EnumerateDevices()
         if len(devices) == 0:
@@ -61,6 +63,7 @@ class BaslerCamera:
                 self._driver.Attach(tl_factory.CreateDevice(device))
                 self._driver.Open()
                 self.friendly_name = device.GetFriendlyName()
+                self.initialized = True
 
         if not self._driver:
             msg = f'Basler {self.camera} not found. Please check if the camera is connected'

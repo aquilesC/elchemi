@@ -5,7 +5,7 @@ import h5py
 from elchemi import buffer_folder
 from threading import Condition, Event
 
-class Buffer():
+class Buffer:
     def __init__(self, type, size = 1, dtype = None, name = 'Buffer'):
         self.type = type
         self.d_type = dtype
@@ -24,7 +24,15 @@ class Buffer():
 
 
     def put(self, img_arr):  
-        ''' Always piuts a new image in the buffer. In case buffer is full, the first image is deleted to make space for the latest'''  
+        """ Put an array into the ring buffer
+        Parameters
+        ----------
+        img_arr
+
+        Returns
+        -------
+
+        """
         if self.type == 'Queue':
             if self.buffer.full():
                 self.buffer.get()

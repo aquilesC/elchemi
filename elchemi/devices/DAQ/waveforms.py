@@ -8,7 +8,7 @@ It is developed with the `Analog Discovery 2 <https://reference.digilentinc.com/
 
 It depends on `Digilent's DWF library wrapper <https://pypi.org/project/dwf/>`_ (pip install dwf) which provides a pythonic way of interacting with the WaveForms dll.
 The DwfController class inherits from the Dwf class of the dwf module, meaning all functionality of Dwf is available.
-In addition the input and output channels are made available internally and basic methods are added to read and write analog values.
+In addition, the input and output channels are made available internally and basic methods are added to read and write analog values.
 The example code at the end shows both examples of using these basic methods and of interacting with the more complex inherited methods.
 
 Unfortunately there's no extended documentation for the dwf module, but original functions to interact with the dll are
@@ -18,10 +18,10 @@ Using an autocompleting IDE it's possible to explore the available methods and f
 In addition to the DwfController class this module contains functions to explore which devices are connected and to close connections.
 
 """
-import logging
 import dwf
-import time
+import logging
 import numpy as np
+import time
 
 
 class DwfController(dwf.Dwf):
@@ -473,7 +473,7 @@ def print_device_list(devices_list=None):
 if __name__ == '__main__':
 
     # import labphew  # import this to use labphew style logging (by importing it before matplotlib it also prevents matplotlib from printing many debugs)
-    #bimport matplotlib.pyplot as plt
+    # bimport matplotlib.pyplot as plt
 
     # Display a list of devices and their possible configurations
     devs = enumerate_devices()
@@ -484,7 +484,7 @@ if __name__ == '__main__':
     for i in range(10):
         daq.write_analog(2.3, 0)  # 1.3V on analog out channel 0
         time.sleep(0.5)
-        daq.write_analog(0,0)
+        daq.write_analog(0, 0)
         time.sleep(0.5)
 
     # # Use the following line instead of the previous line for testing the simulated device

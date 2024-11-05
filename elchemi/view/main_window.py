@@ -4,7 +4,7 @@ import numpy as np
 import pyqtgraph as pg
 from PyQt5 import uic
 from PyQt5.QtCore import Qt, QTimer
-from PyQt5.QtWidgets import QFileDialog, QMainWindow, QScrollBar
+from PyQt5.QtWidgets import QDialog, QFileDialog, QMainWindow, QMessageBox, QScrollBar
 from threading import Thread, Event
 
 from elchemi.experiments.harmonic_analysis import AnalyzeModel
@@ -13,17 +13,17 @@ from elchemi.view import VIEW_FOLDER
 from elchemi.view.config_widget import ConfigWidget
 from elchemi.view.roi_plots import RoiWindow
 from elchemi.devices.camera.basler import BaslerCamera
-from elchemi.devices.buffer import Buffer
+
 
 home_path = Path.home()
 
 
 class DisplayWindow(QMainWindow):
-    def __init__(self, model: AnalyzeModel = None, live_model: LiveAcquisition = None, refresh_rate = 500, cam = 'puA', fft_refresh_rate = 10000, fft_images_window = 500):
+    def __init__(self, model: AnalyzeModel = None, live_model: LiveAcquisition = None, refresh_rate = 500, fft_refresh_rate = 10000, fft_images_window = 500):
         """
         :param measurement model: Model used to analyze the data
 
-        .. ToDo:
+        .. TODO:
             + add button in live view for connecting to devices
             + add buttons for start and stop aquisition
             + add button for starting the digilent (separate from camera) waveforms
@@ -35,12 +35,11 @@ class DisplayWindow(QMainWindow):
 
         # Menu actions
         self.action_open.triggered.connect(self.load_data)
-        self.action_connect.triggered.connect(self.connect_balser)
+        self.action_connect.triggered.connect(self.connect_camera)
         self.action_close.triggered.connect(self.disconnect_basler)
 
         self.analyze_model = model
         self.live_model = live_model
-        self.basler = BaslerCamera(camera = cam, external_buffer_size = fft_images_window)
         self.refresh_rate = refresh_rate
 
         self.frame_selector = QScrollBar(Qt.Vertical)
@@ -113,10 +112,8 @@ class DisplayWindow(QMainWindow):
         self.line_filename.setText(str(config_data['filename']))
         self.line_totalframes.setText(str(config_data['total_frames']))
 
-    def connect_balser(self):
-        self.basler.initialize()
-        self.basler.set_acquisition_mode(self.basler.MODE_LAST)
-
+    def connect_camera(self):
+        self.live_model.camera.initialize()
         self.pixel_format_box.clear()
         for pixel_fmt in self.basler.supported_pixel_formats:
             self.pixel_format_box.addItem(pixel_fmt)
@@ -124,10 +121,13 @@ class DisplayWindow(QMainWindow):
     def start_freerun(self):
         if self.refresh_rate_value.text():
             try:
-                print(float(self.refresh_rate_value.text()))
                 self.refresh_rate = float(self.refresh_rate_value.text())
             except ValueError as e:
-                print(f'Invalid refresh rate for live view window chosen:\t{e}')
+                warning = QMessageBox(self)
+                warning.setWindowTitle('Error')
+                warning.setText('Invalid refresh rate specified')
+                warning.exec()
+
 
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.update_raw_data)
