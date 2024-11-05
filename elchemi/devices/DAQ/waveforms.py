@@ -48,7 +48,7 @@ class DwfController(dwf.Dwf):
         self.logger = logging.getLogger(__name__)
         super().__init__(device_number, config)
 
-        self.AnalogIn = dwf.DwfAnalogIn(self)
+        self.AnalogIn = dwf.DwfAnalogIn(self) #FIXME: These names are not PEP8, why are then copied to self.ai?
         self.AnalogOut = dwf.DwfAnalogOut(self)
         self.DigitalIn = dwf.DwfDigitalIn(self)
         self.DigitalOut = dwf.DwfDigitalOut(self)

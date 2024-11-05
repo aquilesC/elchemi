@@ -112,13 +112,13 @@ class DisplayWindow(QMainWindow):
         self.line_filename.setText(str(config_data['filename']))
         self.line_totalframes.setText(str(config_data['total_frames']))
 
-    def connect_camera(self):
+    def connect_camera(self): #FIXME: Why is only the pixel format updated?
         self.live_model.camera.initialize()
         self.pixel_format_box.clear()
         for pixel_fmt in self.basler.supported_pixel_formats:
             self.pixel_format_box.addItem(pixel_fmt)
     
-    def start_freerun(self):
+    def start_freerun(self): #FIXME: Why is the refresh rate defined in the UI?
         if self.refresh_rate_value.text():
             try:
                 self.refresh_rate = float(self.refresh_rate_value.text())
@@ -137,15 +137,15 @@ class DisplayWindow(QMainWindow):
 
 
     def disconnect_basler(self):
-        self.basler.finalize()
+        self.basler.finalize() #FIXME: Why accessing the camera directly from the view?
         self.timer.stop()
         self.timer.timeout.disconnect()
         del self.timer
 
-        if hasattr(self, 'fft_timer'):
+        if hasattr(self, 'fft_timer'): #FIXME: Wrong pattern. Why would the UI not have the timer?
             self.fft_timer.stop()
-            self.fft_timer.timeout.disconnect()
-            del self.fft_timer
+            self.fft_timer.timeout.disconnect() #FIXME: Why would it be disconnected?
+            del self.fft_timer #FIXME: Why deleting the timer? Isn't it better just to stop it?
 
     def update_raw_data(self):
         '''Method to update the image displayed in the raw data window. It could be merged with update_image in the future.'''
@@ -154,7 +154,7 @@ class DisplayWindow(QMainWindow):
         else:
             self.basler.logger.info('Tried to fetch image when none were available.')
 
-    def update_cam(self):
+    def update_cam(self): #FIXME: Wrong pattern. Why checking .text() and not do anything if false?
         if self.exposure_freerun.text():
             try:
                 self.basler.set_exposue(float(self.exposure_freerun.text()))
@@ -229,23 +229,24 @@ class DisplayWindow(QMainWindow):
         if hasattr(self, 'loaded_data'): # If data was loaded run standard fft
             self.calculate_fft(frame_rate=None)
         else:
-            self.fft_timer = QTimer(self)
-            self.fft_timer.timeout.connect(self.update_fft_data)
-            self.fft_timer.start(self.fft_refresh_rate)
+            self.fft_timer = QTimer(self) #FIXME: Should be defined in the __init__
+            self.fft_timer.timeout.connect(self.update_fft_data) #FIXME: Should be connected in the __init__
+            self.fft_timer.start(self.fft_refresh_rate) #FIXME: This is the important thing
 
     def update_fft_data(self):
         img_list = []
         self.basler.external_buffer.pause_storage.set()
         while not self.basler.external_buffer.get_buffer().empty():
-            img_list.append(self.basler.external_buffer.get_buffer().get())
-        img_list.reverse()
+            img_list.append(self.basler.external_buffer.get_buffer().get()) #FIXME: Not sure this belongs in the VIEW
+        img_list.reverse() #FIXME: why reversing the list?
         self.analyze_model.data = np.array(img_list)
-        self.analyze_model.frame_rate = np.mean(np.array(self.basler.external_buffer.frame_rates))
+        self.analyze_model.frame_rate = np.mean(np.array(self.basler.external_buffer.frame_rates)) #FIXME:
+        # Calculations should be done in the model, not in the view.
         self.basler.external_buffer.pause_storage.clear()
         print(f'Average Camera Frame Rate: {self.analyze_model.frame_rate} \nStandard Deviation Frame Rate: {np.array(np.std(self.basler.external_buffer.frame_rates))}')
 
         if self.fft_thread is None or not self.fft_thread.is_alive():
-            self._stop_fft = Event()
+            self._stop_fft = Event() #FIXME: This should be defined in the __init__
             self.fft_thread = Thread(target=self.calculate_fft, args=[np.mean(np.array(self.basler.external_buffer.frame_rates))])
             self.fft_thread.start()
         else:
@@ -261,7 +262,7 @@ class DisplayWindow(QMainWindow):
         # Then make_full_fft in live analysis will handle the different types of images and data
 
     def change_pixel_format(self):
-        self.basler.set_pixelformat(self.pixel_format_box.currentText())
+        self.basler.set_pixelformat(self.pixel_format_box.currentText()) #FIXME: Camera should not be accessed directly
 
     def calculate_fft(self, frame_rate):
         freq = float(self.frequency_line.text())

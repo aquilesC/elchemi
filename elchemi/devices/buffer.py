@@ -5,8 +5,14 @@ import h5py
 from elchemi import buffer_folder
 from threading import Condition, Event
 
+#FIXME: The idea of buffer in this class is halfway between a reimplementation of a plain Queue and the wrong use of
+# a list (with infinite appends). A better implementation would allocate memory in a numpy array and go through it in
+# a cycle. Queues are very slow since they need to pickle/unpickle for every put/get.
+
+#FIXME: There is a different class called "examples/FIFO_Buffer" which is a more efficient implementation of this buffer.
+
 class Buffer:
-    def __init__(self, type, size = 1, dtype = None, name = 'Buffer'):
+    def __init__(self, type, size = 1, dtype = None, name = 'Buffer'): #FIXME: Using type is dangerous
         self.type = type
         self.d_type = dtype
         self.pixel_fmt = None
@@ -37,16 +43,16 @@ class Buffer:
             if self.buffer.full():
                 self.buffer.get()
             self.buffer.put(img_arr)
-        elif self.type == 'List':
+        elif self.type == 'List':  #FIXME: This is both inefficient and wrong (there's no check for length of buffer)
             self.buffer.append(img_arr)
     
     def get(self):
         if self.type == 'Queue':
             return self.buffer.get()
         elif self.type == 'List':
-            return self.buffer[1]
+            return self.buffer[1] #FIXME: Why is the second element returned? Shouldn't it be the first?
     
-    def get_buffer(self):
+    def get_buffer(self):  #FIXME: This function return two different data types (array or queue)
         #with self.buffer_condition:
         if self.type == 'Queue':
             return self.buffer
@@ -60,7 +66,8 @@ class Buffer:
         '''
         if self.type == 'Queue':
             total_s = 0    
-            for arr in self.buffer.queue:
+            for arr in self.buffer.queue:  #FIXME: Not clear how this is supposed to work. If there's an array
+                # defined, the math is deterministic
                 if isinstance(arr, array):
                     s = array.nbytes
                 else:
@@ -68,19 +75,20 @@ class Buffer:
                 total_s += s
             return total_s
         elif self.type == 'List':
-            print(sum(getsizeof(arr) + arr.nbytes for arr in self.buffer))
+            print(sum(getsizeof(arr) + arr.nbytes for arr in self.buffer)) #FIXME: This also does not make a lot of
+            # sense
             return sum(getsizeof(arr) + arr.nbytes for arr in self.buffer)
     
     def to_array(self):
         pass
 
-    def __len__(self):
+    def __len__(self):  #FIXME: Why implementing this? `qsize` is not accurate
         if self.type == 'Queue':
             return self.buffer.qsize()
         else:
             return len(self.buffer)
         
-    def get_dtype(self):
+    def get_dtype(self): #FIXME: The name "get_dtype" looks like it's going to return something.
         if "Bayer" in self.pixel_fmt:
             if self.pixel_fmt.endswith('8'):
                 self.d_type = 'np.uint8'
@@ -98,9 +106,9 @@ class Buffer:
         if self.type == 'Queue':
             data = []
             while not self.buffer.empty():
-                data.append(self.buffer.get())
+                data.append(self.buffer.get()) #FIXME: This clear the buffer. Is this intended?
             arr = stack(data, axis = 0)
         else:
             arr = self.buffer
         with h5py.File('data.h5', 'w') as hf:
-            hf.create_dataset(str(self.get_size), data=arr)
+            hf.create_dataset(str(self.get_size), data=arr) #FIXME: Why is the datasate named as the size?

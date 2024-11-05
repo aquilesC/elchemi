@@ -20,7 +20,9 @@ class BaslerCamera:
 
     _acquisition_mode = MODE_SINGLE_SHOT
 
-    def __init__(self, camera: str, external_buffer_size, initial_config: dict=None):
+    def __init__(self, camera: str, external_buffer_size, initial_config: dict=None): #FIXME: Asking for the external
+        # buffer at the camera level does not seem the best way to split concerns. This makes it impossible to reuse
+        # the camera code in a context where there's no buffer, for example.
         self.logger = getLogger(__name__)
         self.config = initial_config if initial_config else {}
         self.camera = camera
@@ -280,7 +282,8 @@ class BaslerCamera:
             if grab and grab.GrabSucceeded():
                 img = [grab.GetArray().T]
                 self.temp_image = img[-1]
-                self.external_buffer.frame_rates.append(self.get_frame_rate())
+                self.external_buffer.frame_rates.append(self.get_frame_rate()) #FIXME: Why appending the frame_rates?
+                # This is both inefficient and potentially useless, since framerate is stable.
                 self.external_buffer.put(img)
                 grab.Release()
             if mode == self.MODE_SINGLE_SHOT:

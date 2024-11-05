@@ -32,7 +32,7 @@ class LiveAcquisition:
     def connect_devices(self):
         self.camera = BaslerCamera(self.config['camera']['name'])
         self.camera.initialize()
-        self.daq = dwfc(self.config['daq']['device'], self.config['daq']['config_number'])
+        self.daq = dwfc(self.config['daq']['device'], self.config['daq']['config_number']) #FIXME: dwfc si not defined
 
     def daq_signal_on(self):
         """
@@ -62,7 +62,7 @@ class LiveAcquisition:
         return
 
     def grab_and_acquire_images(self, circular_buffer, total_frames, start_event):
-        self.camera.StartGrabbing(pylon.GrabStrategy_LatestImageOnly)
+        self.camera.StartGrabbing(pylon.GrabStrategy_LatestImageOnly) #FIXME: Why LatestImageOnly? This quickly leads to frame drops
         counter = 0
         start_time_pictures = time.time()  # Measure time it takes for first 100 pictures to be taken
         try:
@@ -70,7 +70,7 @@ class LiveAcquisition:
                 grab_result = self.camera.RetrieveResult(5000, pylon.TimeoutHandling_ThrowException)
                 circular_buffer.put(grab_result.Array)  # Grab images and store them in a buffer
                 counter += 1
-                if counter == nr_data_points:
+                if counter == nr_data_points: #FIXME: Variable not defined
                     end_time_pictures = time.time()
                     elapsed_time = end_time_pictures - start_time_pictures
                     print("Time to take 100 pictures =", elapsed_time, "seconds")
@@ -85,12 +85,12 @@ class LiveAcquisition:
 
     def start_live_acquisition(self):
         # starts acquiring images and displaying the FFT live images
-        circular_buffer = Queue(maxsize=1000)
+        circular_buffer = Queue(maxsize=1000) #FIXME: Why using a Queue directly and not the buffer?
         # Create an event to signal when Thread 1 has captured 100 images
-        start_event = threading.Event()
+        start_event = threading.Event() #FIXME: Event could be an attribute of the class, and automatically becomes available in the thread
         # Create Thread 1 (image capture) and start it
         thread1 = threading.Thread(target=self.grab_and_acquire_images,
-                                   args=(circular_buffer, total_frames, start_event, dwf))
+                                   args=(circular_buffer, total_frames, start_event, dwf)) #FIXME: Variables not defined
         thread1.start()
         # Create Thread 2 (image analysis) and start it
         thread2 = threading.Thread(target=generate_new_data_fft, args=(circular_buffer, start_event))
@@ -98,18 +98,20 @@ class LiveAcquisition:
 
         # Wait for both threads to finish (this won't happen in this example as threads run indefinitely)
         thread1.join()
-        thread2.join()
+        thread2.join() #FIXME: This means the start_live_acquisition is blocking
+        #FIXME: Shouldn't stop_live_acquisition be called as well?
 
-    def toggle_real_fourier():
+    def toggle_real_fourier(self):
         # toggling the live view between grapped images and the harmonic component
         return
+
     def stop_live_acquisition(self):
         # stops live view
         self.camera.StopGrabbing()  # Stop grabbing images
-        print("Thread one is finished")
-        print("Filled up queue size:", circular_buffer.qsize())
+        print("Thread one is finished") #FIXME: Better use logging than print
+        print("Filled up queue size:", circular_buffer.qsize()) #FIXME: Wrong variable
 
-    def update_camera_param(camera):
+    def update_camera_param(camera): #FIXME: There are several mistakes (self missing, for example, many undefined variables)
         """
         :: ToDo..
         + the parameters should be either read from the GUI or config file.
@@ -139,16 +141,17 @@ class LiveAcquisition:
         camera.OffsetX.SetValue(center_x)
         camera.OffsetY.SetValue(center_y)
 
-    def save_last_grabbed_sequence():
+    def save_last_grabbed_sequence(self):
         # saves the raw data from the camera in the memory for offline analysis
         return
 
-    def update_fft_param():
+    def update_fft_param(self):
         # updating the fourier analysis parameters in the live acquisition mode
         return
 
     def generate_new_data_fft(circular_buffer, plot_widget, cycle_frames, close_freq, data_set, iterate,
-                              total_fft_frames):
+                              total_fft_frames): #FIXME: Missing self, the logic is confusing.
+
         # definition that grabs number of cycled frames from buffer, fft analyses them and updates the plot window with the new image
         image_list = []
         treshold = 5  # Set treshold value for when buffer is empty so the analysis part of the code is skipped
@@ -173,7 +176,7 @@ class LiveAcquisition:
                 processed_image = np.abs(fft_data)
             elif plot_phase == 1:
                 processed_image = np.angle(fft_data)
-            update_fft_plot(plot_widget, processed_image)
+            update_fft_plot(plot_widget, processed_image) #FIXME: Why is the experiment taking care of updating a plot?
             data_set[iterate, :, :] = fft_data
             # iterate[0] += 1
             # if iterate[0] == int(total_fft_frames):  # Save collection array with fft analysed images

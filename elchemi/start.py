@@ -1,5 +1,5 @@
 import sys
-sys.path.append('/Users/fg/LPL/Code/Project/Software/Elchemi_1/elchemi')
+sys.path.append('/Users/fg/LPL/Code/Project/Software/Elchemi_1/elchemi') #FIXME: Why is this path appended? This should be removed
 
 import click
 from PyQt5.QtWidgets import QApplication

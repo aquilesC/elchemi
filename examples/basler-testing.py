@@ -1,3 +1,4 @@
+#FIXME: This file can be removed. This is too learn about Basler, not about Elchemi
 """
 most basic script for connecting a basler camera and reading images
 based on the instruction by Aquiles
