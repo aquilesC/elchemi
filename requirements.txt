@@ -9,6 +9,7 @@ matplotlib==3.8.4
 numpy==1.26.4
 packaging==24.0
 Pylon==0.4.4
+pypylon==4.0.0
 pyparsing==3.1.2
 PyQt5==5.15.10
 PyQt5-Qt5==5.15.13
